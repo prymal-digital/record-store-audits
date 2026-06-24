@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecommerce Health Check — Released Records</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #2563eb;
+    --primary-light: #eff6ff;
+    --success: #16a34a;
+    --success-light: #f0fdf4;
+    --warning: #d97706;
+    --warning-light: #fffbeb;
+    --danger: #dc2626;
+    --danger-light: #fef2f2;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f8fafc;
+    color: var(--gray-800);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Header ── */
+  .report-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%);
+    color: white;
+    padding: 60px 0 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .report-header .container { position: relative; }
+  .header-meta { font-size: 13px; font-weight: 500; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .header-title { font-size: 36px; font-weight: 800; margin-bottom: 6px; }
+  .header-url { font-size: 15px; opacity: 0.8; font-weight: 400; }
+  .header-badges { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 5px 14px; font-size: 12.5px; font-weight: 500; }
+
+  /* ── Sections ── */
+  .section { padding: 48px 0; }
+  .section-title { font-size: 22px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .section-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 28px; }
+  .divider { border: none; border-top: 1px solid var(--gray-200); margin: 0; }
+
+  /* ── Overall Score Card ── */
+  .score-hero {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    padding: 48px;
+    display: flex;
+    gap: 48px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .score-circle-wrap { text-align: center; flex-shrink: 0; }
+  .score-circle {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: conic-gradient(#f59e0b 0deg, #f59e0b calc(59/100 * 360deg), #e5e7eb calc(59/100 * 360deg) 360deg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .score-circle-inner {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: white;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .score-number { font-size: 42px; font-weight: 800; color: var(--gray-900); line-height: 1; }
+  .score-denom { font-size: 14px; color: var(--gray-400); font-weight: 500; }
+  .score-label { font-size: 13px; font-weight: 600; color: var(--warning); margin-top: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .score-hero-content { flex: 1; min-width: 260px; }
+  .verdict-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); margin-bottom: 6px; }
+  .verdict-text { font-size: 20px; font-weight: 700; color: var(--gray-900); line-height: 1.3; margin-bottom: 24px; }
+  .verdict-row { display: flex; gap: 20px; flex-wrap: wrap; }
+  .verdict-item { background: var(--gray-50); border-radius: 10px; padding: 16px 20px; flex: 1; min-width: 180px; }
+  .verdict-item-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); margin-bottom: 4px; }
+  .verdict-item-val { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+  .verdict-item.opportunity .verdict-item-label { color: var(--success); }
+  .verdict-item.weakness .verdict-item-label { color: var(--danger); }
+
+  /* ── Category Score Grid ── */
+  .score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .score-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+  .score-card-name { font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 8px; }
+  .score-card-num { font-size: 28px; font-weight: 800; color: var(--gray-900); line-height: 1; margin-bottom: 10px; }
+  .score-card-num span { font-size: 14px; color: var(--gray-400); font-weight: 500; }
+  .progress-bar { height: 6px; background: var(--gray-100); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 10px; }
+
+  .score-1, .score-2, .score-3 { color: var(--danger); }
+  .fill-1, .fill-2, .fill-3 { background: var(--danger); }
+  .score-4, .score-5, .score-6 { color: var(--warning); }
+  .fill-4, .fill-5, .fill-6 { background: var(--warning); }
+  .score-7, .score-8 { color: #2563eb; }
+  .fill-7, .fill-8 { background: #2563eb; }
+  .score-9, .score-10 { color: var(--success); }
+  .fill-9, .fill-10 { background: var(--success); }
+
+  /* ── Charts ── */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media(max-width: 720px) { .charts-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; }
+  .chart-title { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 20px; }
+  .chart-wrap { position: relative; }
+
+  /* ── Strengths / Weaknesses ── */
+  .strength-list, .weakness-list { display: flex; flex-direction: column; gap: 12px; }
+  .strength-item {
+    background: var(--success-light);
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .strength-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .strength-text { font-size: 14px; font-weight: 500; color: #166534; }
+
+  .weakness-card {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    border-left: 4px solid var(--danger);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .weakness-title { font-size: 16px; font-weight: 700; color: var(--gray-900); margin-bottom: 12px; }
+  .weakness-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .tag-why { background: #dbeafe; color: #1e40af; }
+  .tag-impact { background: #fee2e2; color: #991b1b; }
+  .tag-fix { background: #d1fae5; color: #065f46; }
+  .weakness-section { margin-bottom: 10px; }
+  .weakness-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gray-400); margin-bottom: 3px; }
+  .weakness-section-text { font-size: 14px; color: var(--gray-700); }
+
+  /* ── Customer Journey ── */
+  .journey-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+  .journey-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+  .journey-step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .journey-step-title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 8px; }
+  .journey-step-text { font-size: 13.5px; color: var(--gray-600); line-height: 1.6; }
+  .journey-rating { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .journey-score-pill { font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 20px; }
+  .pill-good { background: var(--success-light); color: var(--success); }
+  .pill-fair { background: var(--warning-light); color: var(--warning); }
+  .pill-poor { background: var(--danger-light); color: var(--danger); }
+
+  /* ── Top 10 Improvements ── */
+  .improvement-list { display: flex; flex-direction: column; gap: 14px; }
+  .improvement-card {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 22px 24px;
+    display: flex; gap: 18px; align-items: flex-start;
+  }
+  .improvement-num { width: 36px; height: 36px; border-radius: 10px; background: var(--primary); color: white; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .improvement-content { flex: 1; }
+  .improvement-title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .improvement-desc { font-size: 13.5px; color: var(--gray-600); margin-bottom: 10px; }
+  .improvement-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+  .meta-pill { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+  .meta-priority-high { background: #fee2e2; color: #991b1b; }
+  .meta-priority-med { background: #fef3c7; color: #92400e; }
+  .meta-priority-low { background: #d1fae5; color: #065f46; }
+  .meta-impact-high { background: #ede9fe; color: #5b21b6; }
+  .meta-impact-med { background: #e0f2fe; color: #0369a1; }
+  .meta-diff-easy { background: #d1fae5; color: #065f46; }
+  .meta-diff-med { background: #fef3c7; color: #92400e; }
+  .meta-diff-hard { background: #fee2e2; color: #991b1b; }
+
+  /* ── Quick Wins & Bigger Opportunities ── */
+  .wins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+  .win-card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; }
+  .win-card.quick { border-top: 3px solid var(--success); }
+  .win-card.big { border-top: 3px solid var(--primary); }
+  .win-card-icon { font-size: 24px; margin-bottom: 10px; }
+  .win-card-title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+  .win-card-text { font-size: 13.5px; color: var(--gray-600); line-height: 1.6; }
+
+  /* ── Priority Matrix ── */
+  .matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .matrix-cell { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; }
+  .matrix-cell.hi-easy { border-top: 3px solid var(--success); }
+  .matrix-cell.hi-hard { border-top: 3px solid var(--primary); }
+  .matrix-cell.lo-easy { border-top: 3px solid var(--warning); }
+  .matrix-cell.lo-hard { border-top: 3px solid var(--gray-300); }
+  .matrix-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); margin-bottom: 10px; }
+  .matrix-title { font-size: 14px; font-weight: 700; color: var(--gray-900); margin-bottom: 10px; }
+  .matrix-items { display: flex; flex-direction: column; gap: 6px; }
+  .matrix-item { font-size: 13px; color: var(--gray-600); display: flex; gap: 8px; }
+  .matrix-item::before { content: '→'; color: var(--gray-400); flex-shrink: 0; }
+
+  /* ── Action Plan ── */
+  .action-plan { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media(max-width: 680px) { .action-plan { grid-template-columns: 1fr; } }
+  .action-col { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+  .action-col-header { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .action-col-sub { font-size: 12px; color: var(--gray-400); margin-bottom: 16px; }
+  .action-items { display: flex; flex-direction: column; gap: 10px; }
+  .action-item { font-size: 13.5px; color: var(--gray-700); display: flex; gap: 10px; align-items: flex-start; }
+  .action-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .dot-first { background: var(--danger); }
+  .dot-next { background: var(--warning); }
+  .dot-later { background: var(--primary); }
+  .action-col.first { border-top: 3px solid var(--danger); }
+  .action-col.next { border-top: 3px solid var(--warning); }
+  .action-col.later { border-top: 3px solid var(--primary); }
+
+  /* ── Footer ── */
+  .report-footer { background: var(--gray-900); color: var(--gray-400); text-align: center; padding: 32px; font-size: 13px; }
+
+  /* ── Print ── */
+  @page { size: A4; margin: 0; }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: white; font-size: 13px; }
+    .btn-print { display: none !important; }
+    .report-header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%) !important; }
+    .section { padding: 32px 0; }
+    .score-hero, .chart-card, .weakness-card, .journey-card,
+    .improvement-card, .win-card, .matrix-cell, .action-col,
+    .strength-item, .score-card {
+      box-shadow: 0 0 0 1px #e5e7eb !important;
+      page-break-inside: avoid; break-inside: avoid;
+    }
+    .charts-grid { grid-template-columns: 1fr 1fr; }
+    .score-grid { grid-template-columns: repeat(3, 1fr); }
+    .wins-grid { grid-template-columns: 1fr 1fr; }
+    .journey-grid { grid-template-columns: 1fr 1fr; }
+    .matrix { grid-template-columns: 1fr 1fr; }
+    .action-plan { grid-template-columns: repeat(3, 1fr); }
+    .section:nth-child(4) { page-break-before: always; break-before: page; }
+    .section:nth-child(6) { page-break-before: always; break-before: page; }
+    .section:nth-child(8) { page-break-before: always; break-before: page; }
+    .section:nth-child(10) { page-break-before: always; break-before: page; }
+    .improvement-list, .strength-list, .weakness-list { page-break-inside: avoid; break-inside: avoid; }
+    .improvement-card, .weakness-card { page-break-inside: avoid; break-inside: avoid; margin-bottom: 12px; }
+    section[style*="linear-gradient"] { page-break-before: always; break-before: page; }
+  }
+
+  /* ── Print Button ── */
+  .btn-print {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--primary); color: white;
+    border: none; border-radius: 50px; padding: 12px 22px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    z-index: 100;
+  }
+  .btn-print:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(37,99,235,0.45); }
+
+  @media(max-width: 600px) {
+    .score-hero { padding: 28px; flex-direction: column; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .matrix { grid-template-columns: 1fr; }
+    .header-title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="btn-print" onclick="window.print()">🖨️ Print / Save PDF</button>
+
+<!-- HEADER -->
+<header class="report-header">
+  <div class="container">
+    <div style="display:flex; align-items:center; justify-content:flex-end; margin-bottom:28px; padding-bottom:22px; border-bottom:1px solid rgba(255,255,255,0.12);">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <img src="https://prymal-digital.github.io/record-store-audits/recordstore.png" alt="Record Store Design" style="width:60px; height:60px; object-fit:cover; border-radius:50%;">
+        <div>
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); margin-bottom:3px;">Prepared by</div>
+          <div style="font-size:17px; font-weight:800; color:white; letter-spacing:0.01em;">Record Store Design</div>
+          <div style="font-size:12px; color:rgba(255,255,255,0.5);">recordstoredesign.com</div>
+        </div>
+      </div>
+    </div>
+    <div class="header-meta">Ecommerce Health Check Report · June 2026</div>
+    <div class="header-title">Released Records</div>
+    <div class="header-url">released.co.uk</div>
+    <div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:18px; margin-bottom:4px;">
+      <div style="font-size:13px; color:rgba(255,255,255,0.7);"><span style="font-weight:600; color:white;">Audited:</span> June 2026</div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.7);"><span style="font-weight:600; color:white;">Platform:</span> Shopify</div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.7);"><span style="font-weight:600; color:white;">Category:</span> Independent Record Shop &amp; Label</div>
+      <div style="font-size:13px; color:rgba(255,255,255,0.7);"><span style="font-weight:600; color:white;">Overall Score:</span> 59 / 100</div>
+    </div>
+    <div class="header-badges">
+      <div class="badge">🎵 Secondhand Vinyl</div>
+      <div class="badge">📍 Leeds, UK</div>
+      <div class="badge">🎚️ Electronic / Soul / Hip Hop</div>
+      <div class="badge">🏷️ Record Label</div>
+    </div>
+  </div>
+</header>
+
+<!-- SECTION 1: EXECUTIVE SUMMARY -->
+<section class="section" style="background:white; border-bottom: 1px solid var(--gray-200);">
+  <div class="container">
+    <div class="section-title">Executive Summary</div>
+    <div class="section-subtitle">The big picture — what we found at a glance</div>
+
+    <div class="score-hero">
+      <div class="score-circle-wrap">
+        <div class="score-circle">
+          <div class="score-circle-inner">
+            <div class="score-number">59</div>
+            <div class="score-denom">/ 100</div>
+          </div>
+        </div>
+        <div class="score-label">Needs Work</div>
+      </div>
+      <div class="score-hero-content">
+        <div class="verdict-label">One-Sentence Verdict</div>
+        <div class="verdict-text">Released Records has a genuine brand story, a deep catalogue, and a solid Shopify foundation — but key trust signals are missing and there's almost no mechanism to capture or re-engage visitors.</div>
+        <div class="verdict-row">
+          <div class="verdict-item opportunity">
+            <div class="verdict-item-label">✅ Biggest Opportunity</div>
+            <div class="verdict-item-val">Add customer reviews, an email newsletter, and photos to the About page — three changes that would meaningfully lift conversion for first-time buyers</div>
+          </div>
+          <div class="verdict-item weakness">
+            <div class="verdict-item-label">⚠️ Biggest Weakness</div>
+            <div class="verdict-item-val">No reviews, no email list, and no trust badges — in a category where buyers need reassurance before spending money on records they cannot inspect in person</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: SCORES -->
+<section class="section" style="background: var(--gray-50);">
+  <div class="container">
+    <div class="section-title">Score Overview</div>
+    <div class="section-subtitle">10 categories scored out of 10</div>
+
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-card-name">First Impression</div>
+        <div class="score-card-num score-6">6 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-6" style="width:60%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Design Quality</div>
+        <div class="score-card-num score-6">6 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-6" style="width:60%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Mobile Experience</div>
+        <div class="score-card-num score-6">6 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-6" style="width:60%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Navigation</div>
+        <div class="score-card-num score-7">7 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-7" style="width:70%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Product Pages</div>
+        <div class="score-card-num score-6">6 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-6" style="width:60%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Trust &amp; Credibility</div>
+        <div class="score-card-num score-5">5 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-5" style="width:50%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Conversion Optimisation</div>
+        <div class="score-card-num score-4">4 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-4" style="width:40%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">SEO &amp; Findability</div>
+        <div class="score-card-num score-6">6 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-6" style="width:60%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Social Media Presence</div>
+        <div class="score-card-num score-7">7 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-7" style="width:70%"></div></div>
+      </div>
+      <div class="score-card">
+        <div class="score-card-name">Overall Sales Potential</div>
+        <div class="score-card-num score-6">6 <span>/ 10</span></div>
+        <div class="progress-bar"><div class="progress-fill fill-6" style="width:60%"></div></div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">📊 Category Scores — Radar View</div>
+        <div class="chart-wrap" style="max-width:380px; margin:0 auto;">
+          <canvas id="radarChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📉 Weakest Categories — Where to Focus</div>
+        <div class="chart-wrap">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: STRENGTHS -->
+<section class="section" style="background: white;">
+  <div class="container">
+    <div class="section-title">✅ What Is Working Well</div>
+    <div class="section-subtitle">Genuine strengths that should be preserved and amplified</div>
+    <div class="strength-list">
+      <div class="strength-item">
+        <div class="strength-icon">📖</div>
+        <div class="strength-text"><strong>Compelling brand story.</strong> The About Us page is genuinely excellent — personal, specific to Leeds, rooted in real music culture, and written for "diggers and dancers." This kind of authenticity is rare and very valuable in the secondhand record market.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">📦</div>
+        <div class="strength-text"><strong>Rich product data via Discogs.</strong> Product pages include track listings, label, format details, condition grades (VG, VG+), and barcode identifiers. This is far more information than most record shops provide and gives serious buyers the confidence to purchase without seeing the record in person.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">🚚</div>
+        <div class="strength-text"><strong>Excellent delivery offer — £3 UK shipping.</strong> £3 UK delivery is genuinely competitive for vinyl and is wisely promoted in the homepage hero. This is a strong conversion hook that deserves even more prominence across the site.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">🎭</div>
+        <div class="strength-text"><strong>Strong social presence across multiple platforms.</strong> Facebook, Instagram, Spotify, and YouTube are all active and linked. The Spotify presence is particularly smart — it connects the digital listening experience to the physical buying experience.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">🎵</div>
+        <div class="strength-text"><strong>Deep genre filtering and a huge catalogue.</strong> Over 60 pages of products with 70+ genre tags make this a serious crate-digging destination. The collection page genre filters serve specialist buyers very well.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">🏪</div>
+        <div class="strength-text"><strong>Local pickup with clear readiness time.</strong> Product pages state "Pickup available at Released Records, Leeds — Usually ready in 24 hours." This bridges online and in-store and adds a practical local touch that builds trust.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">📋</div>
+        <div class="strength-text"><strong>30-day return policy.</strong> A clear, generous returns policy is in place — especially important for used vinyl where buyers can't inspect the record in advance. It reduces purchase risk and improves buyer confidence.</div>
+      </div>
+      <div class="strength-item">
+        <div class="strength-icon">🔍</div>
+        <div class="strength-text"><strong>Search with contextual placeholder.</strong> The search bar helpfully says "Search Artists, Albums, Label" — a small but smart UX detail that guides buyers on exactly how to find what they want in a large catalogue.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4: WEAKNESSES -->
+<section class="section" style="background: var(--gray-50);">
+  <div class="container">
+    <div class="section-title">⚠️ What Is Holding This Store Back</div>
+    <div class="section-subtitle">Key problems — why they matter and how to fix them</div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">1. Zero customer reviews or ratings anywhere on the site</div>
+      <div class="weakness-meta"><span class="tag tag-why">Trust</span><span class="tag tag-impact">High Revenue Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">There are no product reviews, no customer testimonials, and no star ratings anywhere on the site. For a shop selling used goods online, reviews are one of the most powerful trust signals available. 92% of consumers read reviews before buying.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">First-time visitors have no social proof that this shop is legitimate, ships reliably, or grades records accurately. Without reviews, cautious new buyers will choose a competitor that has them.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Install Judge.me (free on Shopify) and send a short email to past customers asking for a review. Even 10–15 reviews transforms the store's credibility. Display star ratings on both collection pages and product pages.</div>
+      </div>
+    </div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">2. No email list or newsletter signup</div>
+      <div class="weakness-meta"><span class="tag tag-why">Repeat Sales</span><span class="tag tag-impact">High Revenue Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">There is no visible email capture on the homepage, no pop-up, no footer form, and no incentive to subscribe. Every visitor who leaves without buying is lost forever — there is no way to bring them back.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">Record buyers are passionate and loyal — they will come back if you contact them. Without an email list, you are starting from zero every day. A list of even 500 subscribers could generate significant recurring revenue through weekly "new stock" emails alone.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Add a footer newsletter signup with the hook "New arrivals every week — be first to know." Shopify Email is free for up to 10,000 sends per month. A weekly new-stock email is the perfect product for this audience.</div>
+      </div>
+    </div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">3. Homepage lacks a clear value proposition</div>
+      <div class="weakness-meta"><span class="tag tag-why">First Impression</span><span class="tag tag-impact">Medium Revenue Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">The homepage hero shows a carousel with "£3 UK DELIVERY" as the headline, but there is no statement of who Released Records is, what it specialises in, or why a visitor should browse here instead of anywhere else. The brand story that lives on the About page is invisible to most visitors.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">Visitors from Google, Instagram, or word-of-mouth decide within 3 seconds whether to stay or leave. Without a compelling "who we are" hook, bounce rates will be high and cold traffic won't convert.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Add a tagline beneath the logo or in the hero: "Leeds-born, dancefloor-rooted. Independent record shop specialising in electronic music, soul, and hip hop." Simple, true, and immediately clear to the right audience.</div>
+      </div>
+    </div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">4. No trust badges or secure checkout signals</div>
+      <div class="weakness-meta"><span class="tag tag-why">Checkout Confidence</span><span class="tag tag-impact">Medium Revenue Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">There are no padlock icons, "Secure Checkout" badges, payment method logos, or buyer protection signals anywhere near the Add to Cart button. First-time visitors on a shop they have never heard of need visible reassurance before they hand over their card details.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">Payment anxiety is one of the top reasons people abandon carts on smaller independent shops. A buyer who almost purchases — but doesn't see a trust signal — will look for the same record somewhere else.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Add payment logos (Visa, Mastercard, PayPal), a "Secure Checkout" line near the Add to Cart button, and a brief reminder of the 30-day return policy on product pages. These take minutes to add and meaningfully reduce cart abandonment.</div>
+      </div>
+    </div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">5. Collection page defaults to alphabetical sort — newest stock is buried</div>
+      <div class="weakness-meta"><span class="tag tag-why">Product Discovery</span><span class="tag tag-impact">Medium Revenue Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">The default sort on the All Products page is alphabetical, which means every visitor always sees the same records first — starting with "Fats Waller." Fresh, exciting new stock is buried many pages deep, which punishes both new visitors and loyal repeat buyers.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">Repeat buyers — the store's most valuable customers — see the same old stock every visit. New arrivals are one of the biggest drivers of impulse purchases in this category, and they are completely hidden.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Change the default collection sort to "Date, new to old" in the Shopify collection settings. This surfaces fresh stock immediately and rewards loyal visitors who check back regularly.</div>
+      </div>
+    </div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">6. Blog is effectively inactive</div>
+      <div class="weakness-meta"><span class="tag tag-why">SEO &amp; Findability</span><span class="tag tag-impact">Medium Revenue Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">The most recent visible blog post is from March 2025. For a shop with this much genuine expertise — a label, event nights, 70+ genre categories — the blog should be a major discovery and SEO asset. Music fans search for genre guides, new releases, and vinyl tips constantly.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">Significant missed SEO opportunity. Every well-written article is a permanent, free traffic source. "Best Leeds record shops," "Top ambient albums on vinyl," "Leeds electronic music history" — these searches happen every day and could bring in new customers who never would have found the shop otherwise.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Commit to one blog post per month targeting a specific search term. The label releases (Wulls, Chris Dawkins) and the Leeds electronic scene give you rich material most record shops simply don't have.</div>
+      </div>
+    </div>
+
+    <div class="weakness-card">
+      <div class="weakness-title">7. About page has no photos</div>
+      <div class="weakness-meta"><span class="tag tag-why">Trust &amp; Brand</span><span class="tag tag-impact">Low–Medium Impact</span></div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Why it matters</div>
+        <div class="weakness-section-text">The About Us story is excellent — but there are no photos. No shop interior, no record racks, no events, no team. People buy from people and places they can picture. Visual storytelling is a huge missed opportunity for a shop with this much personality and heritage.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">Effect on sales</div>
+        <div class="weakness-section-text">Lower emotional connection means lower loyalty and repeat purchase rates. The "Leeds independent record shop with a soul" positioning loses its impact when there is nothing to see.</div>
+      </div>
+      <div class="weakness-section">
+        <div class="weakness-section-label">✅ Recommended fix</div>
+        <div class="weakness-section-text">Add 2–3 photos to the About page: the shop floor at Outlaws Yacht Club, the record racks, a past event or live night. Even phone photos taken on a Saturday afternoon will work perfectly here.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 5: CUSTOMER JOURNEY -->
+<section class="section" style="background: white;">
+  <div class="container">
+    <div class="section-title">🛤️ Customer Journey Review</div>
+    <div class="section-subtitle">What a first-time shopper experiences from landing to checkout</div>
+    <div class="journey-grid">
+      <div class="journey-card">
+        <div class="journey-step-num">1</div>
+        <div class="journey-step-title">Landing on the Homepage</div>
+        <div class="journey-step-text">The visitor sees the logo, a search bar, and a carousel promoting £3 delivery. Genre tiles appear below. It's tidy but gives little sense of the store's personality or why it's worth browsing. The compelling brand story lives on the About page — most cold visitors will never find it.</div>
+        <div class="journey-rating"><span class="journey-score-pill pill-fair">Fair</span></div>
+      </div>
+      <div class="journey-card">
+        <div class="journey-step-num">2</div>
+        <div class="journey-step-title">Finding Products</div>
+        <div class="journey-step-text">The genre filter system is genuinely good and the search bar works well. However, the default sort is alphabetical — so visitors always see "Fats Waller" before anything exciting. A "New In" default would serve buyers much better and reduce the number of people who browse for 30 seconds and leave.</div>
+        <div class="journey-rating"><span class="journey-score-pill pill-fair">Decent but improvable</span></div>
+      </div>
+      <div class="journey-card">
+        <div class="journey-step-num">3</div>
+        <div class="journey-step-title">Building Trust</div>
+        <div class="journey-step-text">This is the weakest stage. There are no reviews, no trust badges, and no visible social proof anywhere on product pages. A first-time buyer has very little to reassure them that this is a safe and reliable shop — even though it clearly is one.</div>
+        <div class="journey-rating"><span class="journey-score-pill pill-poor">Major gaps</span></div>
+      </div>
+      <div class="journey-card">
+        <div class="journey-step-num">4</div>
+        <div class="journey-step-title">Considering a Purchase</div>
+        <div class="journey-step-text">Product pages have excellent data — tracklist, condition, label, Discogs info. But there is nothing to push the visitor over the line: no urgency, no "you might also like," and no cross-sell. Good data, but weak persuasion.</div>
+        <div class="journey-rating"><span class="journey-score-pill pill-fair">Good data, weak persuasion</span></div>
+      </div>
+      <div class="journey-card">
+        <div class="journey-step-num">5</div>
+        <div class="journey-step-title">Adding to Cart</div>
+        <div class="journey-step-text">The Add to Cart button works and the local pickup option is a nice touch. But there is no cross-sell, no "frequently bought together," and no urgency. The cart experience is functional but completely bare — a missed opportunity to increase order value.</div>
+        <div class="journey-rating"><span class="journey-score-pill pill-fair">Functional but bare</span></div>
+      </div>
+      <div class="journey-card">
+        <div class="journey-step-num">6</div>
+        <div class="journey-step-title">Checkout Confidence</div>
+        <div class="journey-step-text">Shopify's standard checkout is secure and reliable. But the lead-up to it shows no payment logos, no "safe shopping" message, and no return policy reminder at the critical moment. Buyer anxiety is higher than it needs to be entering checkout.</div>
+        <div class="journey-rating"><span class="journey-score-pill pill-poor">Needs attention</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6: TOP 10 IMPROVEMENTS -->
+<section class="section" style="background: var(--gray-50);">
+  <div class="container">
+    <div class="section-title">🏆 Top 9 Improvements</div>
+    <div class="section-subtitle">Prioritised by impact — ranked from most to least important</div>
+    <div class="improvement-list">
+
+      <div class="improvement-card">
+        <div class="improvement-num">1</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Add customer reviews with Judge.me</div>
+          <div class="improvement-desc">Install Judge.me (free on Shopify) and email your last 30 customers asking for a quick review. Aim for 10–15 reviews as a starting point. Display star ratings on both collection and product pages. This is the single biggest trust lever available.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-high">🔴 Priority: Critical</span>
+            <span class="meta-pill meta-impact-high">📈 Impact: Very High</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">2</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Add a newsletter signup and start weekly "New Arrivals" emails</div>
+          <div class="improvement-desc">Place a signup form in the footer with the hook "Get new arrivals every week — first to know." Use Shopify Email (free). A curated weekly email of what just came in is the perfect product for your audience and will drive consistent repeat purchases.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-high">🔴 Priority: High</span>
+            <span class="meta-pill meta-impact-high">📈 Impact: High</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">3</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Add a homepage tagline</div>
+          <div class="improvement-desc">Add one sentence to the header or hero: "Leeds-born, dancefloor-rooted. Independent record shop specialising in electronic music, soul, and hip hop." This is all it takes to grab the right visitor and make them want to stay.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-high">🔴 Priority: High</span>
+            <span class="meta-pill meta-impact-high">📈 Impact: High</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">4</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Add payment logos and a return policy reminder to product pages</div>
+          <div class="improvement-desc">Near the Add to Cart button, add Visa/Mastercard/PayPal logos, a "Secure Checkout" line, and "30-day hassle-free returns." These visual signals reduce payment anxiety and can meaningfully improve first-time buyer conversion rates.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-high">🔴 Priority: High</span>
+            <span class="meta-pill meta-impact-high">📈 Impact: High</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">5</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Change default collection sort to "New In"</div>
+          <div class="improvement-desc">Switch the default sort on the Products page to "Date, new to old" in Shopify collection settings. Fresh stock becomes immediately visible, rewarding both new visitors and loyal repeat buyers who check back regularly.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-med">🟠 Priority: Medium</span>
+            <span class="meta-pill meta-impact-med">📈 Impact: Medium</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">6</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Add photos to the About page</div>
+          <div class="improvement-desc">The About page story is excellent — now give it visuals. Add 2–3 photos: the shop floor at Outlaws Yacht Club, the record racks, or a live night. Phone photos are fine. This makes the brand feel real, human, and worth buying from.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-med">🟠 Priority: Medium</span>
+            <span class="meta-pill meta-impact-med">📈 Impact: Medium</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">7</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Revive the blog with monthly content</div>
+          <div class="improvement-desc">Publish one article per month targeting a specific search term: "Best breakbeat records of the 90s," "Leeds electronic music: a history," "Top ambient albums on vinyl." Each post is a permanent, free traffic source from Google. Your label and music knowledge give you more to write about than most shops.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-med">🟠 Priority: Medium</span>
+            <span class="meta-pill meta-impact-high">📈 Impact: High (long-term)</span>
+            <span class="meta-pill meta-diff-med">🔧 Effort: Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">8</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Add "You May Also Like" cross-sell to product pages</div>
+          <div class="improvement-desc">Show 3–4 related records on each product page — same genre or artist. A customer buying one house 12" is very likely to pick up a second if shown the right options. Increases average order value with no extra traffic required.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-med">🟠 Priority: Medium</span>
+            <span class="meta-pill meta-impact-med">📈 Impact: Medium</span>
+            <span class="meta-pill meta-diff-med">🔧 Effort: Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="improvement-num">9</div>
+        <div class="improvement-content">
+          <div class="improvement-title">Feature label releases on the homepage</div>
+          <div class="improvement-desc">Wulls and Chris Dawkins releases are a genuine differentiator — this store isn't just selling records, it's making them. A "From Our Label" homepage section creates a deeper connection between the shop, the label, and customers who attend your events.</div>
+          <div class="improvement-meta">
+            <span class="meta-pill meta-priority-low">🟢 Priority: Lower</span>
+            <span class="meta-pill meta-impact-med">📈 Impact: Medium</span>
+            <span class="meta-pill meta-diff-easy">🔧 Effort: Easy</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7: QUICK WINS -->
+<section class="section" style="background: white;">
+  <div class="container">
+    <div class="section-title">⚡ Quick Wins</div>
+    <div class="section-subtitle">5 things you can fix this week without a developer</div>
+    <div class="wins-grid">
+      <div class="win-card quick">
+        <div class="win-card-icon">⭐</div>
+        <div class="win-card-title">Install Judge.me and email past customers</div>
+        <div class="win-card-text">Free Shopify app. Email your last 20–30 buyers asking for a quick review. Even 10 reviews transforms how new visitors perceive the store.</div>
+      </div>
+      <div class="win-card quick">
+        <div class="win-card-icon">📧</div>
+        <div class="win-card-title">Add a newsletter signup to the footer</div>
+        <div class="win-card-text">Shopify Email is built in and free. Add a "Get new arrivals weekly" signup to the footer. Done in the theme editor in under 15 minutes.</div>
+      </div>
+      <div class="win-card quick">
+        <div class="win-card-icon">✏️</div>
+        <div class="win-card-title">Add a homepage tagline</div>
+        <div class="win-card-text">One sentence in the header or hero to say who you are and who you serve. Immediately stops the right visitors from bouncing.</div>
+      </div>
+      <div class="win-card quick">
+        <div class="win-card-icon">🔒</div>
+        <div class="win-card-title">Add trust badges to product pages</div>
+        <div class="win-card-text">Add payment logos and a "30-day returns" line near Add to Cart. Reduces the biggest fear first-time buyers have before checkout.</div>
+      </div>
+      <div class="win-card quick">
+        <div class="win-card-icon">🆕</div>
+        <div class="win-card-title">Change default sort to New In</div>
+        <div class="win-card-text">In Shopify collection settings, switch to "Date, new to old." Fresh stock becomes visible immediately — biggest benefit for repeat visitors.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8: BIGGER OPPORTUNITIES -->
+<section class="section" style="background: var(--gray-50);">
+  <div class="container">
+    <div class="section-title">🚀 Bigger Growth Opportunities</div>
+    <div class="section-subtitle">5 strategic moves with serious long-term impact</div>
+    <div class="wins-grid">
+      <div class="win-card big">
+        <div class="win-card-icon">📬</div>
+        <div class="win-card-title">Build a weekly "New Arrivals" email habit</div>
+        <div class="win-card-text">Record collectors are exactly the audience that responds to curated email. A weekly "what just came in" drop with photos and prices can drive consistent repeat sales from people who already love what you do — at zero advertising cost.</div>
+      </div>
+      <div class="win-card big">
+        <div class="win-card-icon">📝</div>
+        <div class="win-card-title">Own Leeds record shop searches in Google</div>
+        <div class="win-card-text">A focused content strategy — genre guides, Leeds music history, vinyl tips — could bring 500–2,000 extra monthly visitors searching for exactly what you sell. Your label and deep music knowledge give you a genuine content advantage over other shops.</div>
+      </div>
+      <div class="win-card big">
+        <div class="win-card-icon">🎵</div>
+        <div class="win-card-title">Connect the label and the shop more tightly</div>
+        <div class="win-card-text">Released Records and Working Classics are a unique selling point almost no other record shop can match. Feature new label releases prominently on the homepage, write about the artists in the blog, and use Spotify playlists to drive people from streaming to buying.</div>
+      </div>
+      <div class="win-card big">
+        <div class="win-card-icon">📦</div>
+        <div class="win-card-title">Create curated "crate pick" bundles</div>
+        <div class="win-card-text">Offer bundles: "3 essential soul 7"s — curated by Released Records" or "Our top 5 breakbeat 12"s." These are shareable, giftable, and increase average order value while showcasing your expert curation in a way a plain product page never can.</div>
+      </div>
+      <div class="win-card big">
+        <div class="win-card-icon">📱</div>
+        <div class="win-card-title">Link Instagram posts directly to product pages</div>
+        <div class="win-card-text">Enable Instagram Shopping to tag products in your posts. Every time you show a record on Instagram, followers can tap to buy it immediately. This turns social content into direct sales without the visitor needing to navigate the website.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 9: PRIORITY MATRIX -->
+<section class="section" style="background: white;">
+  <div class="container">
+    <div class="section-title">📊 Priority Matrix</div>
+    <div class="section-subtitle">Where your improvements sit by impact and effort</div>
+    <div class="matrix">
+      <div class="matrix-cell hi-easy">
+        <div class="matrix-label">✅ High Impact · Easy</div>
+        <div class="matrix-title">Do These First</div>
+        <div class="matrix-items">
+          <div class="matrix-item">Install reviews app, email past customers</div>
+          <div class="matrix-item">Add newsletter signup to footer</div>
+          <div class="matrix-item">Add homepage tagline</div>
+          <div class="matrix-item">Add trust badges &amp; return policy to product pages</div>
+          <div class="matrix-item">Change collection default sort to New In</div>
+          <div class="matrix-item">Add photos to About page</div>
+        </div>
+      </div>
+      <div class="matrix-cell hi-hard">
+        <div class="matrix-label">🚀 High Impact · More Effort</div>
+        <div class="matrix-title">Plan &amp; Schedule</div>
+        <div class="matrix-items">
+          <div class="matrix-item">Build weekly new-stock email newsletter</div>
+          <div class="matrix-item">SEO blog content strategy (monthly articles)</div>
+          <div class="matrix-item">Connect label releases to homepage &amp; blog</div>
+          <div class="matrix-item">Instagram Shopping product tagging</div>
+        </div>
+      </div>
+      <div class="matrix-cell lo-easy">
+        <div class="matrix-label">💡 Lower Impact · Easy</div>
+        <div class="matrix-title">Fill Gaps When Time Allows</div>
+        <div class="matrix-items">
+          <div class="matrix-item">Feature label releases on homepage</div>
+          <div class="matrix-item">Add "You May Also Like" to product pages</div>
+          <div class="matrix-item">Update Google Business Profile photos</div>
+        </div>
+      </div>
+      <div class="matrix-cell lo-hard">
+        <div class="matrix-label">⏳ Lower Impact · More Effort</div>
+        <div class="matrix-title">Lowest Priority</div>
+        <div class="matrix-items">
+          <div class="matrix-item">Create curated vinyl bundle products</div>
+          <div class="matrix-item">Loyalty or repeat-buyer scheme</div>
+          <div class="matrix-item">Advanced analytics and conversion tracking</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10: ACTION PLAN -->
+<section class="section" style="background: var(--gray-50);">
+  <div class="container">
+    <div class="section-title">📅 Final Action Plan</div>
+    <div class="section-subtitle">A clear sequence — what to do and when</div>
+    <div class="action-plan">
+      <div class="action-col first">
+        <div class="action-col-header" style="color: var(--danger);">Fix First</div>
+        <div class="action-col-sub">This week — no developer needed</div>
+        <div class="action-items">
+          <div class="action-item"><div class="action-dot dot-first"></div>Install Judge.me and email past customers for reviews</div>
+          <div class="action-item"><div class="action-dot dot-first"></div>Add newsletter signup to the site footer</div>
+          <div class="action-item"><div class="action-dot dot-first"></div>Add a tagline or brand statement to the homepage hero</div>
+          <div class="action-item"><div class="action-dot dot-first"></div>Add payment logos and return policy near Add to Cart</div>
+          <div class="action-item"><div class="action-dot dot-first"></div>Switch collection default sort to newest-first</div>
+          <div class="action-item"><div class="action-dot dot-first"></div>Add 2–3 photos to the About Us page</div>
+        </div>
+      </div>
+      <div class="action-col next">
+        <div class="action-col-header" style="color: var(--warning);">Fix Next</div>
+        <div class="action-col-sub">This month — small investment of time</div>
+        <div class="action-items">
+          <div class="action-item"><div class="action-dot dot-next"></div>Send first weekly "New Arrivals" email to your list</div>
+          <div class="action-item"><div class="action-dot dot-next"></div>Feature label releases (Wulls, Chris Dawkins) on homepage</div>
+          <div class="action-item"><div class="action-dot dot-next"></div>Write first blog post targeting a local search term</div>
+          <div class="action-item"><div class="action-dot dot-next"></div>Set up Instagram Shopping product tagging</div>
+          <div class="action-item"><div class="action-dot dot-next"></div>Update Google Business Profile with current photos</div>
+        </div>
+      </div>
+      <div class="action-col later">
+        <div class="action-col-header" style="color: var(--primary);">Fix Later</div>
+        <div class="action-col-sub">Next quarter — bigger impact</div>
+        <div class="action-items">
+          <div class="action-item"><div class="action-dot dot-later"></div>Build a consistent monthly blog content calendar</div>
+          <div class="action-item"><div class="action-dot dot-later"></div>Add "You May Also Like" cross-sell to product pages</div>
+          <div class="action-item"><div class="action-dot dot-later"></div>Create 2–3 curated "crate pick" bundle products</div>
+          <div class="action-item"><div class="action-dot dot-later"></div>Consider a loyalty scheme for repeat buyers</div>
+          <div class="action-item"><div class="action-dot dot-later"></div>Explore partnerships with Leeds venues and music nights</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #3b82f6 100%); padding: 64px 0;">
+  <div class="container" style="text-align: center;">
+    <div style="display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:20px; padding:6px 16px; font-size:12px; font-weight:600; color:rgba(255,255,255,0.8); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:20px;">Record Store Design</div>
+    <h2 style="font-size:32px; font-weight:800; color:white; margin-bottom:14px; line-height:1.2;">Ready to fix this — and grow your shop?</h2>
+    <p style="font-size:16px; color:rgba(255,255,255,0.75); max-width:540px; margin:0 auto 36px; line-height:1.7;">We build Shopify webshops built specifically for record stores — your brand, your catalogue, your community. No more missed sales. No more lost visitors.</p>
+    <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom:40px;">
+      <a href="https://www.prymal.world/digital#calendly" target="_blank"
+         style="display:inline-block; background:white; color:#1e3a8a; font-size:15px; font-weight:700; padding:14px 32px; border-radius:50px; text-decoration:none; letter-spacing:0.01em; box-shadow:0 4px 20px rgba(0,0,0,0.2);">
+        📅 Book a free discovery call
+      </a>
+      <a href="https://recordstoredesign.com" target="_blank"
+         style="display:inline-block; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.3); color:white; font-size:15px; font-weight:600; padding:14px 32px; border-radius:50px; text-decoration:none; letter-spacing:0.01em;">
+        recordstoredesign.com
+      </a>
+    </div>
+    <div style="display:flex; justify-content:center; gap:40px; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-size:22px; font-weight:800; color:white;">20 min</div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">Free discovery call</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:22px; font-weight:800; color:white;">Fixed fee</div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">No surprises</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:22px; font-weight:800; color:white;">Built for vinyl</div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px;">Specialists, not generalists</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="report-footer">
+  <div style="margin-bottom:10px; font-size:13px; font-weight:700; letter-spacing:0.08em; color:#9ca3af;">RECORD STORE DESIGN · A service by PRYMAL Digital · recordstoredesign.com</div>
+  <div>Ecommerce Health Check Report · Released Records · released.co.uk</div>
+  <div style="margin-top:6px; opacity:0.6;">Prepared June 2026 · This report is for informational purposes · Scores are consultant assessments based on observed site content</div>
+</footer>
+
+<script>
+const radarCtx = document.getElementById('radarChart').getContext('2d');
+new Chart(radarCtx, {
+  type: 'radar',
+  data: {
+    labels: ['First Impression','Design','Mobile','Navigation','Products','Trust','Conversion','SEO','Social','Sales Potential'],
+    datasets: [{
+      label: 'Score',
+      data: [6, 6, 6, 7, 6, 5, 4, 6, 7, 6],
+      backgroundColor: 'rgba(37, 99, 235, 0.15)',
+      borderColor: '#2563eb',
+      pointBackgroundColor: '#2563eb',
+      pointBorderColor: '#fff',
+      pointRadius: 4,
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        min: 0, max: 10,
+        ticks: { stepSize: 2, color: '#9ca3af', font: { size: 10 } },
+        grid: { color: '#e5e7eb' },
+        pointLabels: { color: '#374151', font: { size: 11, weight: '600' } }
+      }
+    }
+  }
+});
+
+const barCtx = document.getElementById('barChart').getContext('2d');
+const categories = ['Conversion Opt.','Trust & Credibility','First Impression','Design','Mobile','SEO','Product Pages','Sales Potential','Navigation','Social Media'];
+const scores     = [4, 5, 6, 6, 6, 6, 6, 6, 7, 7];
+const colors     = scores.map(s => s <= 4 ? '#dc2626' : s <= 6 ? '#f59e0b' : '#2563eb');
+
+new Chart(barCtx, {
+  type: 'bar',
+  data: {
+    labels: categories,
+    datasets: [{
+      label: 'Score / 10',
+      data: scores,
+      backgroundColor: colors,
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { min: 0, max: 10, ticks: { stepSize: 2, color: '#9ca3af' }, grid: { color: '#f3f4f6' } },
+      y: { ticks: { color: '#374151', font: { size: 12 } }, grid: { display: false } }
+    }
+  }
+});
+</script>
+</body>
+</html>
